@@ -3,14 +3,13 @@ from scipy.stats import f_oneway
 import statsmodels.api as sm
 from statsmodels.formula.api import mixedlm
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 from statsmodels.stats.multitest import multipletests
 
-def create_group_data(file_path, original_df):
-    substrings_df = pd.read_csv(file_path)
-
+def create_group_data(meta_df, original_df):
+    
     # Extract the list of substrings from the first column
-    substrings = substrings_df.iloc[:, 0].apply(lambda x: x[1:] if len(x) > 1 else '').tolist()
+    substrings = meta_df.iloc[:, 0].apply(lambda x: x[1:] if len(x) > 1 else '').tolist()
 
     # Filter columns based on the substrings
     # Iterate over each column in the original DataFrame
@@ -26,7 +25,7 @@ def create_group_data(file_path, original_df):
     filtered_df = original_df[filtered_columns]
     return filtered_df
 
-def get_gene_data_for_lmm(dfM, gene_200):
+def get_gene_data_for_lmm(dfM, metaDf, gene_200):
     data = []
     for gene_name in gene_200['Gene']:
         # Extract the rows as arrays (excluding the gene name) for the specified gene
@@ -53,13 +52,15 @@ original_file_path = "Summary.filtered_gene_200.csv"
 original_df = pd.read_csv(original_file_path)
 
 # Filter data set according to the 2 models
-group_model1 = create_group_data('.\\meta\\VMB_Model1_Meta.csv', original_df)
-group_model2 = create_group_data('.\\meta\\VMB_Model2_Meta.csv', original_df)
+meta_df1 = pd.read_csv('.\\meta\\VMB_Model1_Meta.csv');
+meta_df2 = pd.read_csv('.\\meta\\VMB_Model2_Meta.csv');
+group_model1 = create_group_data(meta_df1, original_df)
+group_model2 = create_group_data(meta_df2, original_df)
 
 # Read the gene names
 gene_200 = pd.read_csv('.\\meta\\Gene_200.csv')
 
-df_for_lmm = get_gene_data_for_lmm(group_model1, gene_200)
+df_for_lmm = get_gene_data_for_lmm(group_model1, meta_df1, gene_200)
 
 # Define and Fit the Mixed Effects Model
 # model = mixedlm("GeneCount ~ Group", df_for_lmm, groups=df_for_lmm["Gene"])
@@ -67,4 +68,3 @@ df_for_lmm = get_gene_data_for_lmm(group_model1, gene_200)
 
 # Print Model Summary
 # print(result.summary())
-
